@@ -1,0 +1,20 @@
+{
+  "name": "chat-tools",
+  "version": "1.0.0",
+  "description": "chatroom",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chat-tools"
+  ],
+  "author": "ivan",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "redis": "^2.8.0",
+    "socket.io": "^1.7.3"
+  }
+}

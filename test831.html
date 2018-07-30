@@ -1,0 +1,129 @@
+<?DOCTYPE html>
+ 
+<meta charset='utf-8'>
+
+<style>
+.container {
+    font-size: 12px;
+    border-radius: 10px;
+    border: solid 1px #336699;
+    padding: 15px 15px 15px 15px;
+    line-height: 20px;
+    width: 400px;
+
+}
+.disabled {
+    color: gray;
+}
+.enabled {
+    color: true;
+}
+</style>
+<script src='/socket.io/socket.io.js'></script>
+<script src='http://code.jquery.com/jquery-1.8.2.min.js'></script>
+<script>
+$(document).ready(function() {
+    var socket = io.connect('http://localhost:3000/');
+    var nickname = '';
+    var room = '';
+    var rooms = {};
+    data = {room:'room1'};
+    socket.emit('join', data);
+
+    $('#form1').submit(function(e) {
+        e.preventDefault();
+        data = {name: $('#nickname').val(),room:'room1'}
+        nickname = $('#nickname').val();
+        socket.emit('join', data);
+    });
+    $('#form2').submit(function(e) {
+        e.preventDefault();
+        m = $('#msg').val();
+        name = $('#nickname').val();
+        socket.emit('post', {nickname:name, msg: m});
+        $('#msg').val('');
+        console.log('send');
+        // updateMsg({nickname:nickname,msg:m});
+    })
+
+    $('#rooms').bind('change', function() {
+        var value = $(this).val();
+        if(value!=='') {
+            socket.emit('leave');// 1
+            socket.emit('join', value);// 2
+            $('#msg').focus();
+        }
+    });
+    socket.on('msg', function(m) {
+        console.log(m);
+        updateMsg(m);
+    });
+    socket.on('joinroomsuccess', function(m) {
+        console.log('joined')
+        $('#msglabel').prop('className', 'enabled');
+        $('#msg').prop('disabled', false);
+        $('#send').prop('disabled', false);
+    });
+
+    socket.on('system', function(m) {
+        updateMsg({nickname:'SYSTEM', msg:m});
+    });
+   socket.on('warning', function(m) {
+        alert(m);
+    });
+    define('/test831a.js', function(conf) {
+        var sel = $('#rooms');
+        var opt = document.createElement('option');
+        opt.value = '';
+        opt.innerHTML = '';
+        sel.append(opt);
+        for(var i in conf) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i;
+            sel.append(opt);
+        }
+        opt = null;
+    });
+    $('#nickname').focus();
+
+    function updateMsg(msg) {
+        var ta = $("#panel");
+        var t = new Date();
+        var s = t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds();
+        var m = '[ ' + msg.nickname + ' (' + s + ')]: ' + msg.msg;
+        ta.val(ta.val()+'\n'+m);
+        setTimeout(function(){
+            ta.scrollTop(ta[0].scrollHeight - ta.innerHeight());
+        },10);
+    }
+    function define(url, cb) {
+        $.ajax({
+            url:url
+        })
+        .done(function(data) {
+            var f = new Function('var module={},exports=null;\n'+data+'\nif(typeof module.exports !== "undefined") {\nreturn module.exports;\n}\nif(null != exports) {\n return exports;\n}');
+            var exports = f();
+            if(typeof exports !== 'undefined') {
+                cb(exports);
+                return;
+            }
+        });
+    }
+});
+
+
+</script>
+
+
+<div class="container">
+    <textarea cols='54' rows='24' id='panel' readonly></textarea><br>
+    <form id='form1' name='form1'>
+        <label id='nicknamelabel' class='enabled'>Your Nickname: </label><input type='text' size='20' id='nickname'>
+        <!-- <input type='submit' value='send' id='sendnickname'> -->
+    </form>
+    <select id='rooms' disabled></select>
+    <form id='form2' name='form2'>
+        <label id='msglabel' class='disabled'>Message: </label><input type='text' size='54' id='msg' ><input type='submit' value='send' id='send' >
+    </form>
+</div>
